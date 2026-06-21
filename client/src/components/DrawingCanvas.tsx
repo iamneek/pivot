@@ -31,7 +31,6 @@ const DrawingCanvas = () => {
         if (contextRef.current) {
             contextRef.current.beginPath();
             contextRef.current.moveTo(offsetX, offsetY);
-            console.log(offsetX, offsetY)
             setIsDrawing(true);
         }
 
@@ -52,8 +51,17 @@ const DrawingCanvas = () => {
         }
     }
 
+    const clearCanvas = () => {
+        if (contextRef.current && canvasRef.current) {
+            contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
+    }
+
     return (
-        <canvas height={800} width={800} ref={canvasRef} style={{ width: "100%", height: "100vh", display: "block", cursor: "crosshair" }} onMouseDown={startDrawing} onMouseMove={Draw} onMouseUp={stopDrawing} ></canvas>
+        <div className="canvas__container ">
+            <button className="canvas__clear_btn !px-4 !py-2 bg-red-400 z-10 cursor-pointer rounded-sm !mt-4 absolute right-4 hover:bg-red-500" onClick={clearCanvas}>Clear Canvas</button>
+            <canvas height={800} width={800} ref={canvasRef} style={{ width: "100%", height: "100vh", display: "block", cursor: "crosshair" }} onMouseDown={startDrawing} onMouseMove={Draw} onMouseUp={stopDrawing} ></canvas>
+        </div>
     )
 }
 
