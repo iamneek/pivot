@@ -26,6 +26,11 @@ func (client *Client) ReadPump(ctx context.Context) {
 	}
 }
 
-func (client *Client) WritePump() {
-	
+func (client *Client) WritePump(ctx context.Context) {
+	for data:= range client.send {
+		err := client.conn.Write(ctx, websocket.MessageBinary, data)
+		if (err != nil) {
+			return
+		}
+	}
 }
