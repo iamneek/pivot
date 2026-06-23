@@ -20,8 +20,24 @@ func (h *Hub) Run() {
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
-				// close(client.send)
+				close(client.send)
+			}
+		case msg := <-h.broadcast:
+			for client := range h.clients {
+				if client == msg.sender {
+					continue
+				}
+				client.send <- msg.message
 			}
 		}
+	}
+}
+
+func NewHub() *Hub {
+	return &Hub{
+		clients:    make(map[*Client]bool),
+		broadcast:  make(chan Broadcast, 256),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
 	}
 }
