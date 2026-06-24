@@ -13,7 +13,9 @@ func main() {
 	hub := NewHub()
 	go hub.Run()
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		c, err := websocket.Accept(w, r, nil)
+		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+			OriginPatterns: []string{"localhost"},
+		})
 		if err != nil {
 			return
 		}
