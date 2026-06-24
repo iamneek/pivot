@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type Broadcast struct {
 	message []byte
 	sender  *Client
@@ -17,13 +19,14 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
-			
+
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
+				fmt.Println("Client Disconnected")
 			}
-			
+
 		case msg := <-h.broadcast:
 			for client := range h.clients {
 				if client == msg.sender {
