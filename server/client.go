@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coder/websocket"
 )
@@ -22,14 +23,15 @@ func (client *Client) ReadPump(ctx context.Context) {
 		if err != nil {
 			return
 		}
-		client.hub.broadcast <- Broadcast{sender: client, message: data} 
+		client.hub.broadcast <- Broadcast{sender: client, message: data}
+		fmt.Println("Receiving strokes...")
 	}
 }
 
 func (client *Client) WritePump(ctx context.Context) {
-	for data:= range client.send {
-		err := client.conn.Write(ctx, websocket.MessageBinary, data)
-		if (err != nil) {
+	for data := range client.send {
+		err := client.conn.Write(ctx, websocket.MessageText, data)
+		if err != nil {
 			return
 		}
 	}

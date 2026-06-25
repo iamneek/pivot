@@ -10,6 +10,8 @@ const DrawingCanvas = () => {
 
     const strokesRef = useRef<Stroke[]>([]);
     const currentStrokeRef = useRef<Stroke | null>(null);
+    const wsRef = useRef<WebSocket>(null);
+
     const resizeCanvas = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -46,10 +48,44 @@ const DrawingCanvas = () => {
         }
     };
 
+
+
     useEffect(() => {
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
-        return () => window.removeEventListener('resize', resizeCanvas);
+        return () => {
+            window.removeEventListener('resize', resizeCanvas);
+        }
+    }, []);
+
+    useEffect(() => {
+        const ws = new WebSocket("ws://127.0.0.1:8000/ws")
+        wsRef.current = ws
+        ws.onopen = () => {
+            console.log("Connected to ws");
+        }
+
+        ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data)
+            console.log("Received from server: ", msg)
+            if (msg.Action === "Draw") {
+                strokesRef.current.push(msg.DataPoints)
+            } else if (msg.Action === "Clear") {
+                localClear()
+            }
+            if (canvasRef.current) {
+                const rect = canvasRef.current.getBoundingClientRect();
+                redrawAll(rect.width, rect.height);
+            }
+        }
+
+        ws.onerror = (err) => {
+            console.log("Error: ", err)
+        }
+        ws.onclose = () => {
+            console.log("Connection closed")
+        }
+        return () => ws.close()
     }, []);
 
     const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -66,6 +102,8 @@ const DrawingCanvas = () => {
     const stopDrawing = () => {
         if (currentStrokeRef.current) {
             strokesRef.current.push(currentStrokeRef.current);
+            wsRef.current?.send(JSON.stringify({ "Action": "Draw", "DataPoints": currentStrokeRef.current }))
+            // console.log(JSON.stringify(currentStrokeRef.current))
             currentStrokeRef.current = null;
         }
         setIsDrawing(false);
@@ -81,13 +119,18 @@ const DrawingCanvas = () => {
         }
     };
 
-    const clearCanvas = () => {
+    const localClear = () => {
         strokesRef.current = [];
         const canvas = canvasRef.current;
         if (canvas) {
             const rect = canvas.getBoundingClientRect();
             redrawAll(rect.width, rect.height);
         }
+    };
+
+    const clearCanvas = () => {
+        wsRef.current?.send(JSON.stringify({ "Action": "Clear" }))
+        localClear();
     };
 
     const DrawPoints = (e: React.MouseEvent<HTMLCanvasElement>) => {
