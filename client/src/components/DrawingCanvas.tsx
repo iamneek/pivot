@@ -63,6 +63,7 @@ const DrawingCanvas = () => {
         wsRef.current = ws
         ws.onopen = () => {
             console.log("Connected to ws");
+            localClear();
         }
 
         ws.onmessage = (event) => {
